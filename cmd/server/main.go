@@ -23,6 +23,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /subscriptions", &handler.ListSubscriptions{})
+	mux.Handle("POST /subscriptions", &handler.CreateSubscription{})
 
 	var handler http.Handler = middleware.NewResultLogger(mux)
 
