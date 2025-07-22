@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/lenkton/effective-mobile-test/pkg/configuration"
+	"github.com/lenkton/effective-mobile-test/pkg/handler"
 	"github.com/lenkton/effective-mobile-test/pkg/middleware"
 )
 
@@ -19,9 +20,11 @@ func init() {
 func main() {
 	config := configuration.New()
 
-	var mux http.Handler = http.NewServeMux()
+	mux := http.NewServeMux()
 
-	mux = middleware.NewResultLogger(mux)
+	mux.Handle("GET /subscriptions", &handler.ListSubscriptions{})
 
-	log.Fatal(http.ListenAndServe(config.Address(), mux))
+	var handler http.Handler = middleware.NewResultLogger(mux)
+
+	log.Fatal(http.ListenAndServe(config.Address(), handler))
 }
