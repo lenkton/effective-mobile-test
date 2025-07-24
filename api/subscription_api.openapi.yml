@@ -1,0 +1,52 @@
+openapi: 3.0.4
+info:
+  title: Subscription API
+  description: some description
+  version: 0.1.0
+paths:
+  /subscriptions:
+    get:
+      summary: Get all subscriptions
+      description: some description
+      operationId: listSubscriptions
+      responses:
+        '200':
+          description: some description
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscription'
+components:
+  schemas:
+    Subscription:
+      type: object
+      required:
+        - id
+        - service_name
+        - price
+        - user_id
+        - start_date
+      properties:
+        id:
+          type: integer
+          example: 10
+        service_name:
+          type: string
+          example: 'Yandex Plus'
+        price:
+          type: integer
+          example: 400
+        user_id:
+          type: string
+          format: uuid
+          example: '4be45174-afe4-4cf4-aa42-b237d47cd6a4'
+        start_date:
+          type: string
+          pattern: '^\d{2}-\d{4}$'
+          example: '07-2025'
+        end_date:
+          type: string
+          pattern: '^\d{2}-\d{4}$'
+          example: '08-2025'
