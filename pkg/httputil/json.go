@@ -20,3 +20,8 @@ func WriteJSON(w http.ResponseWriter, status int, data any) {
 		w.Write(encoded)
 	}
 }
+
+func WriteErrorJSON(w http.ResponseWriter, status int, errorMessage string) {
+	errData := map[string]string{"error": errorMessage}
+	WriteJSON(w, status, errData)
+}
