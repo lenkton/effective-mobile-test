@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"github.com/lenkton/effective-mobile-test/pkg/configuration"
 	"github.com/lenkton/effective-mobile-test/pkg/handler"
@@ -20,10 +22,17 @@ func init() {
 func main() {
 	config := configuration.New()
 
+	// WARN: Conn is not thread safe!!!
+	db, err := pgx.Connect(context.Background(), config.DatabaseURL)
+	if err != nil {
+		log.Fatalf("Error: unable to connect to database: %v\n", err)
+	}
+	defer db.Close(context.Background())
+
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /subscriptions", &handler.ListSubscriptions{})
-	mux.Handle("POST /subscriptions", &handler.CreateSubscription{})
+	mux.Handle("GET /subscriptions", &handler.ListSubscriptions{DB: db})
+	mux.Handle("POST /subscriptions", &handler.CreateSubscription{DB: db})
 
 	var handler http.Handler = middleware.NewResultLogger(mux)
 
