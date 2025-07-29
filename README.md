@@ -12,6 +12,11 @@
    # it is just an example! do not use these values in production!
    cat .env.example > .env
    ```
+1. Poputlate the `.env.postgres` file
+   ```sh
+   # it is just an example! do not use these values in production!
+   cat .env.postgres.example > .env.postgres
+   ```
 1. Start the containers
    ```sh
    docker compose up -d
