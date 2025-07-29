@@ -30,7 +30,7 @@ func (t *Time) Scan(src any) error {
 }
 
 func (t *Time) UnmarshalJSON(src []byte) error {
-	parsedTime, err := time.Parse("01-2006", string(src))
+	parsedTime, err := time.Parse("\"01-2006\"", string(src))
 	t.Time = parsedTime
 	return err
 }
