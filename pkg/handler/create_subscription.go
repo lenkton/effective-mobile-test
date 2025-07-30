@@ -25,15 +25,21 @@ func (h *CreateSubscription) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.DB.Exec(
+	err = h.DB.QueryRow(
 		context.Background(),
 		`INSERT INTO subscriptions (service_name, price, user_id, start_date, end_date)
-		VALUES ($1, $2, $3, $4, $5)`,
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id`,
 		sub.ServiceName,
 		sub.Price,
 		sub.UserID,
 		sub.StartDate.Time,
 		sub.EndDate,
-	)
+	).Scan(&sub.ID)
+	if err != nil {
+		httputil.WriteErrorJSON(w, http.StatusInternalServerError, "error saving subscription")
+		log.Printf("Error: CreateSubscription#ServeHTTP:QueryRow: %v\n", err)
+		return
+	}
 	httputil.WriteJSON(w, http.StatusCreated, sub)
 }
