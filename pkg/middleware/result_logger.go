@@ -20,7 +20,7 @@ func (resultLogger ResultLogger) ServeHTTP(writer http.ResponseWriter, request *
 	spy := spyWriter{ResponseWriter: writer}
 	resultLogger.next.ServeHTTP(&spy, request)
 	t1 := time.Now()
-	log.Printf("[%d] [%v]: %s\n", spy.code, t1.Sub(t0), request.RequestURI)
+	log.Printf("[%d] [%v]: %s %s\n", spy.code, t1.Sub(t0), request.Method, request.RequestURI)
 }
 
 type spyWriter struct {
