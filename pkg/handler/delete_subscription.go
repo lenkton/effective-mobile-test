@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/lenkton/effective-mobile-test/pkg/httputil"
+	"github.com/lenkton/effective-mobile-test/pkg/middleware"
 )
 
 type DeleteSubscription struct {
@@ -15,14 +15,9 @@ type DeleteSubscription struct {
 }
 
 // ServeHTTP implements http.Handler.
+// Requires: WithSubscriptionID middleware in chain prior to this
 func (h *DeleteSubscription) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	pathID := r.PathValue("id")
-	id, err := strconv.Atoi(pathID)
-	if err != nil {
-		log.Printf("Error: DeleteSubscription#ServeHTTP:Atoi: %v\n", err)
-		httputil.WriteErrorJSON(w, http.StatusUnprocessableEntity, "malformed subscription id")
-		return
-	}
+	id := r.Context().Value(middleware.SubscriptionIDContextKey).(int)
 
 	commandTag, err := h.DB.Exec(
 		context.Background(),

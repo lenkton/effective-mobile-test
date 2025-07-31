@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/lenkton/effective-mobile-test/pkg/httputil"
+	"github.com/lenkton/effective-mobile-test/pkg/middleware"
 	"github.com/lenkton/effective-mobile-test/pkg/subscription"
 )
 
@@ -17,17 +17,12 @@ type UpdateSubscription struct {
 }
 
 // ServeHTTP implements http.Handler.
+// Requires: WithSubscriptionID middleware in chain prior to this
 func (h *UpdateSubscription) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	pathID := r.PathValue("id")
-	id, err := strconv.Atoi(pathID)
-	if err != nil {
-		log.Printf("Error: UpdateSubscription#ServeHTTP:Atoi: %v\n", err)
-		httputil.WriteErrorJSON(w, http.StatusUnprocessableEntity, "malformed subscription id")
-		return
-	}
+	id := r.Context().Value(middleware.SubscriptionIDContextKey).(int)
 
 	sub := &subscription.Subscription{}
-	err = json.NewDecoder(r.Body).Decode(&sub)
+	err := json.NewDecoder(r.Body).Decode(&sub)
 	if err != nil {
 		httputil.WriteErrorJSON(w, http.StatusUnprocessableEntity, "malformed request body")
 		log.Printf("Error: UpdateSubscription#ServeHTTP:Decode: %v\n", err)
