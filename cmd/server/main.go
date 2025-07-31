@@ -32,7 +32,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /subscriptions", &handler.ListSubscriptions{DB: db})
-	mux.Handle("GET /subscriptions/{id}", &handler.GetSubscription{DB: db})
+	mux.Handle("GET /subscriptions/{id}", middleware.WithSubscription(&handler.GetSubscription{DB: db}, db))
 	mux.Handle("POST /subscriptions", &handler.CreateSubscription{DB: db})
 	mux.Handle("DELETE /subscriptions/{id}", &handler.DeleteSubscription{DB: db})
 	mux.Handle("PUT /subscriptions/{id}", &handler.UpdateSubscription{DB: db})
