@@ -3,6 +3,7 @@ package subscription
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -21,6 +22,22 @@ func NewStorage(db *pgx.Conn) *Storage {
 
 func (e *ErrorSubscriptionNotFound) Error() string {
 	return e.message
+}
+
+// could return some errors from pgx
+func (s Storage) ListSubscriptions() ([]*Subscription, error) {
+	rows, err := s.db.Query(context.Background(), "select * from subscriptions")
+	if err != nil {
+		log.Printf("Error: ListSubscriptions#ServerHTTP/Query: %v\n", err)
+		return []*Subscription{}, fmt.Errorf("ListSubscriptions: Query: %v", err)
+	}
+
+	subs, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[Subscription])
+	if err != nil {
+		return []*Subscription{}, fmt.Errorf("ListSubscriptions: CollectRows: %v", err)
+	}
+
+	return subs, nil
 }
 
 // could return ErrorSubscriptionNotFound
