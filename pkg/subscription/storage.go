@@ -16,12 +16,20 @@ type ErrorSubscriptionNotFound struct {
 	message string
 }
 
-func NewStorage(db *pgx.Conn) *Storage {
-	return &Storage{db}
-}
-
 func (e *ErrorSubscriptionNotFound) Error() string {
 	return e.message
+}
+
+type ErrorNoRowsAffected struct {
+	message string
+}
+
+func (e *ErrorNoRowsAffected) Error() string {
+	return e.message
+}
+
+func NewStorage(db *pgx.Conn) *Storage {
+	return &Storage{db}
 }
 
 // could return some errors from pgx
@@ -88,4 +96,22 @@ func (s *Storage) CreateSubscription(sub *Subscription) (int, error) {
 	).Scan(&id)
 
 	return id, err
+}
+
+func (s Storage) DeleteSubscription(id int) error {
+	commandTag, err := s.db.Exec(
+		context.Background(),
+		`DELETE FROM subscriptions WHERE id = $1`,
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("Storage#DeleteSubscription: Exec: %v", err)
+	}
+	if commandTag.RowsAffected() == 0 {
+		return &ErrorNoRowsAffected{"Storage#DeleteSubscription Exec: no rows affected"}
+	}
+	if commandTag.RowsAffected() != 1 {
+		return fmt.Errorf("Storage#DeleteSubscription Exec: affected %v rows", commandTag.RowsAffected())
+	}
+	return nil
 }

@@ -37,7 +37,7 @@ func main() {
 	mux.Handle("GET /subscriptions", &handler.ListSubscriptions{Storage: subStorage})
 	mux.Handle("GET /subscriptions/{id}", middleware.WithSubscriptionID(middleware.WithSubscription(&handler.GetSubscription{}, subStorage)))
 	mux.Handle("POST /subscriptions", &handler.CreateSubscription{Storage: subStorage})
-	mux.Handle("DELETE /subscriptions/{id}", middleware.WithSubscriptionID(&handler.DeleteSubscription{DB: db}))
+	mux.Handle("DELETE /subscriptions/{id}", middleware.WithSubscriptionID(&handler.DeleteSubscription{Storage: subStorage}))
 	mux.Handle("PUT /subscriptions/{id}", middleware.WithSubscriptionID(&handler.UpdateSubscription{DB: db}))
 
 	var handler http.Handler = middleware.NewResultLogger(mux)
