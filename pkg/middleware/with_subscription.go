@@ -19,7 +19,7 @@ const (
 )
 
 // Requires: WithSubscriptionID middleware in chain prior to this
-func WithSubscription(next http.Handler, storage subscription.Storage) http.Handler {
+func WithSubscription(next http.Handler, storage *subscription.Storage) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := r.Context().Value(SubscriptionIDContextKey).(int)
 

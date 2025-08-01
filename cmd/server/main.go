@@ -35,7 +35,7 @@ func main() {
 	subStorage := subscription.NewStorage(db)
 
 	mux.Handle("GET /subscriptions", &handler.ListSubscriptions{DB: db})
-	mux.Handle("GET /subscriptions/{id}", middleware.WithSubscriptionID(middleware.WithSubscription(&handler.GetSubscription{}, *subStorage)))
+	mux.Handle("GET /subscriptions/{id}", middleware.WithSubscriptionID(middleware.WithSubscription(&handler.GetSubscription{}, subStorage)))
 	mux.Handle("POST /subscriptions", &handler.CreateSubscription{Storage: subStorage})
 	mux.Handle("DELETE /subscriptions/{id}", middleware.WithSubscriptionID(&handler.DeleteSubscription{DB: db}))
 	mux.Handle("PUT /subscriptions/{id}", middleware.WithSubscriptionID(&handler.UpdateSubscription{DB: db}))
