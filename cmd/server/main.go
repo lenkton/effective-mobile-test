@@ -10,6 +10,7 @@ import (
 	"github.com/lenkton/effective-mobile-test/pkg/configuration"
 	"github.com/lenkton/effective-mobile-test/pkg/handler"
 	"github.com/lenkton/effective-mobile-test/pkg/middleware"
+	"github.com/lenkton/effective-mobile-test/pkg/subscription"
 )
 
 func init() {
@@ -31,8 +32,10 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	subStorage := subscription.NewStorage(db)
+
 	mux.Handle("GET /subscriptions", &handler.ListSubscriptions{DB: db})
-	mux.Handle("GET /subscriptions/{id}", middleware.WithSubscriptionID(middleware.WithSubscription(&handler.GetSubscription{DB: db}, db)))
+	mux.Handle("GET /subscriptions/{id}", middleware.WithSubscriptionID(middleware.WithSubscription(&handler.GetSubscription{}, *subStorage)))
 	mux.Handle("POST /subscriptions", &handler.CreateSubscription{DB: db})
 	mux.Handle("DELETE /subscriptions/{id}", middleware.WithSubscriptionID(&handler.DeleteSubscription{DB: db}))
 	mux.Handle("PUT /subscriptions/{id}", middleware.WithSubscriptionID(&handler.UpdateSubscription{DB: db}))

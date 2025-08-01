@@ -3,14 +3,12 @@ package handler
 import (
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/lenkton/effective-mobile-test/pkg/httputil"
 	"github.com/lenkton/effective-mobile-test/pkg/middleware"
 	"github.com/lenkton/effective-mobile-test/pkg/subscription"
 )
 
 type GetSubscription struct {
-	DB *pgx.Conn
 }
 
 // ServeHTTP implements http.Handler.

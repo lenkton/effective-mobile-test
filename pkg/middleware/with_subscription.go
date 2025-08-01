@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/lenkton/effective-mobile-test/pkg/httputil"
 	"github.com/lenkton/effective-mobile-test/pkg/subscription"
 )
@@ -20,33 +19,21 @@ const (
 )
 
 // Requires: WithSubscriptionID middleware in chain prior to this
-func WithSubscription(next http.Handler, db *pgx.Conn) http.Handler {
+func WithSubscription(next http.Handler, storage subscription.Storage) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := r.Context().Value(SubscriptionIDContextKey).(int)
 
-		sub := &subscription.Subscription{}
-		err := db.QueryRow(
-			context.Background(),
-			`SELECT id,
-		        service_name,
-				price,
-				user_id,
-				start_date,
-				end_date
-		FROM subscriptions WHERE id = $1`,
-			id,
-		).Scan(
-			&sub.ID,
-			&sub.ServiceName,
-			&sub.Price,
-			&sub.UserID,
-			&sub.StartDate,
-			&sub.EndDate,
-		)
+		sub, err := storage.GetSubscription(id)
+
+		if _, ok := err.(*subscription.ErrorSubscriptionNotFound); ok {
+			log.Printf("Warn: WithSubscription#ServeHTTP:QueryRow: %v\n", err)
+			httputil.WriteErrorJSON(w, http.StatusNotFound, "subscription not found")
+			return
+		}
 		if err != nil {
 			// TODO: use log levels
 			log.Printf("Error: WithSubscription#ServeHTTP:QueryRow: %v\n", err)
-			httputil.WriteErrorJSON(w, http.StatusNotFound, "subscription not found")
+			httputil.WriteErrorJSON(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
 
