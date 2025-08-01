@@ -98,6 +98,50 @@ func (s *Storage) CreateSubscription(sub *Subscription) (int, error) {
 	return id, err
 }
 
+// could return ErrorSubscriptionNotFound
+// could return some other errors from pgx
+func (s *Storage) UpdateSubscription(id int, newParams *Subscription) (*Subscription, error) {
+	result := &Subscription{}
+
+	err := s.db.QueryRow(
+		context.Background(),
+		`UPDATE subscriptions
+		SET service_name=$2,
+		    price=$3,
+			user_id=$4,
+			start_date=$5,
+			end_date=$6
+		WHERE id = $1
+		RETURNING id,
+		          service_name,
+				  price,
+				  user_id,
+				  start_date,
+				  end_date`,
+		id,
+		newParams.ServiceName,
+		newParams.Price,
+		newParams.UserID,
+		newParams.StartDate,
+		newParams.EndDate,
+	).Scan(
+		&result.ID,
+		&result.ServiceName,
+		&result.Price,
+		&result.UserID,
+		&result.StartDate,
+		&result.EndDate,
+	)
+	if err == pgx.ErrNoRows {
+		return nil, &ErrorSubscriptionNotFound{fmt.Sprintf("UpdateSubscription: record with id %d not found", id)}
+	}
+	if err != nil {
+		return nil, fmt.Errorf("UpdateSubscription: %v", err)
+	}
+
+	return result, nil
+}
+
 func (s Storage) DeleteSubscription(id int) error {
 	commandTag, err := s.db.Exec(
 		context.Background(),

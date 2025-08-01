@@ -1,19 +1,17 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/lenkton/effective-mobile-test/pkg/httputil"
 	"github.com/lenkton/effective-mobile-test/pkg/middleware"
 	"github.com/lenkton/effective-mobile-test/pkg/subscription"
 )
 
 type UpdateSubscription struct {
-	DB *pgx.Conn
+	Storage *subscription.Storage
 }
 
 // ServeHTTP implements http.Handler.
@@ -29,43 +27,16 @@ func (h *UpdateSubscription) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.DB.QueryRow(
-		context.Background(),
-		`UPDATE subscriptions
-		SET service_name=$2,
-		    price=$3,
-			user_id=$4,
-			start_date=$5,
-			end_date=$6
-		WHERE id = $1
-		RETURNING id,
-		          service_name,
-				  price,
-				  user_id,
-				  start_date,
-				  end_date`,
-		id,
-		sub.ServiceName,
-		sub.Price,
-		sub.UserID,
-		sub.StartDate,
-		sub.EndDate,
-	).Scan(
-		&sub.ID,
-		&sub.ServiceName,
-		&sub.Price,
-		&sub.UserID,
-		&sub.StartDate,
-		&sub.EndDate,
-	)
-	if err == pgx.ErrNoRows {
-		log.Printf("Warn: UpdateSubscription#ServeHTTP:Exec: %v\n", err)
+	sub, err = h.Storage.UpdateSubscription(id, sub)
+
+	if _, ok := err.(*subscription.ErrorSubscriptionNotFound); ok {
+		log.Printf("Warn: UpdateSubscription#ServeHTTP: UpdateSubscription: %v\n", err)
 		httputil.WriteErrorJSON(w, http.StatusNotFound, "subscription not found")
 		return
 	}
 	if err != nil {
 		// TODO: use log levels
-		log.Printf("Error: UpdateSubscription#ServeHTTP:Exec: %v\n", err)
+		log.Printf("Error: UpdateSubscription#ServeHTTP: UpdateSubscription: %v\n", err)
 		httputil.WriteErrorJSON(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
