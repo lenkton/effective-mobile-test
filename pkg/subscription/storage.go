@@ -54,3 +54,21 @@ func (s *Storage) GetSubscription(id int) (*Subscription, error) {
 
 	return sub, nil
 }
+
+// could return some other errors from pgx
+func (s *Storage) CreateSubscription(sub *Subscription) (int, error) {
+	var id int
+	err := s.db.QueryRow(
+		context.Background(),
+		`INSERT INTO subscriptions (service_name, price, user_id, start_date, end_date)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id`,
+		sub.ServiceName,
+		sub.Price,
+		sub.UserID,
+		sub.StartDate.Time,
+		sub.EndDate,
+	).Scan(&id)
+
+	return id, err
+}

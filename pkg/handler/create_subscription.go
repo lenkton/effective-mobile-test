@@ -1,18 +1,16 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/lenkton/effective-mobile-test/pkg/httputil"
 	"github.com/lenkton/effective-mobile-test/pkg/subscription"
 )
 
 type CreateSubscription struct {
-	DB *pgx.Conn
+	Storage *subscription.Storage
 }
 
 // ServeHTTP implements http.Handler.
@@ -25,21 +23,13 @@ func (h *CreateSubscription) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.DB.QueryRow(
-		context.Background(),
-		`INSERT INTO subscriptions (service_name, price, user_id, start_date, end_date)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id`,
-		sub.ServiceName,
-		sub.Price,
-		sub.UserID,
-		sub.StartDate.Time,
-		sub.EndDate,
-	).Scan(&sub.ID)
+	id, err := h.Storage.CreateSubscription(sub)
+
 	if err != nil {
 		httputil.WriteErrorJSON(w, http.StatusInternalServerError, "error saving subscription")
 		log.Printf("Error: CreateSubscription#ServeHTTP:QueryRow: %v\n", err)
 		return
 	}
+	sub.ID = id
 	httputil.WriteJSON(w, http.StatusCreated, sub)
 }
